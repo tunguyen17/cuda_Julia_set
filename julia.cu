@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "../book/common/book.h"
+// #include "../book/common/book.h"
 // #include "../book/common/cpu_bitmap.h"
 
-
+// Seeting up for complex number
 struct complex{
   // internal variables
   float r;
@@ -27,9 +27,35 @@ struct complex{
   }
 };
 
+// Test if a coordiate is in the julia set
+
+int julia(int x, int y){
+
+  const float scale = 1.5;
+
+  // Need to normalize this so that has range -1, to 1
+  float jx = scale * x;
+  float jy = scale * y;
+
+  // Creating 2 complex numbers
+  complex a(jx, jy);
+  complex c(-0.8, 0.156);
+
+  // Do 200 calculation of the julia set
+  for(int i = 0; i < 200; i++){
+    a = a*a + c;
+    // When a get really big -> a diverge -> not in Julia set
+    if(a.magnitude() > 1000){
+      return 0;
+    }
+  }
+
+  // a did not diverge
+  return 1;
+}
+
 int main(){
   // printf("Hello");
-  complex a(1,2);
-  complex b(3,4);
-  (a*a + b).print();
+  int res = julia(0.5, 0.7);
+  printf("%d \n", res);
 }
