@@ -31,5 +31,5 @@ int main(){
   // printf("Hello");
   complex a(1,2);
   complex b(3,4);
-  (a*b).print();
+  (a*a + b).print();
 }
