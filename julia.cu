@@ -29,10 +29,10 @@ struct complex{
 
 // Test if a coordiate is in the julia set
 
-__device__ int julia(int x, int y, int dim){
+__device__ int julia(int x, int y, int dim, int scale){
 
   // Declare scale
-  const float scale = 1.8;
+  // const float scale = 3;
 
   // Need to normalize this so that has range -1, to 1
   float jx = scale * (float) (dim/2 - x)/(dim/2);
@@ -40,13 +40,13 @@ __device__ int julia(int x, int y, int dim){
 
   // Creating 2 complex numbers
   complex a(jx, jy);
-  complex c(0.5, 2);
+  complex c(0, -0.8);
 
   // Do 200 calculation of the julia set
   for(int i = 0; i < 200; i++){
     a = a*a + c;
     // When a get really big -> a diverge -> not in Julia set
-    if(a.magnitude() > 500){
+    if(a.magnitude() > 50){
       return 255;
     }
   }
@@ -55,7 +55,7 @@ __device__ int julia(int x, int y, int dim){
   return 0;
 }
 
-__global__ void kernel(int *c){
+__global__ void kernel(int *c, int scale){
 
   // get the current position
   int x = blockIdx.x;
@@ -66,12 +66,21 @@ __global__ void kernel(int *c){
   int dim = gridDim.x;
 
   // caclulate if the current coordiate is in the julia set
-  c[x + dim*y] = julia(x, y, dim);
+  c[x + dim*y] = julia(x, y, dim, scale);
 }
 
 
-int main(){
-  // printf("Hello");
+int main(int argc, char **argv){
+  // printf("%d -- %c \n", argc, argv[2]);
+
+
+  int scale = 2;
+  if(argc > 1){
+    char *p; // For using in strtol
+    scale = strtol(argv[1], &p, 10);
+  }
+  // printf(" %d \n", strtol(argv[1], &p, 10));
+
   // int res = julia(0.5, 0.7);
   int dimgrid = 1000;
   dim3 grid(dimgrid, dimgrid);
@@ -83,7 +92,7 @@ int main(){
 
   cudaMalloc((int **) &c_dev, dimgrid*dimgrid*sizeof(int));
 
-  kernel<<<grid, 1>>>(c_dev);
+  kernel<<<grid, 1>>>(c_dev, scale);
 
   cudaMemcpy(c_host, c_dev,  dimgrid*dimgrid*sizeof(int),cudaMemcpyDeviceToHost);
   // printf("%d \n", res);
@@ -93,7 +102,7 @@ int main(){
   FILE *fp;
 
   fp = fopen("test.txt", "w");
-  printf("File opened n = %d", dimgrid);
+  printf("File opened n = %d | scale = %d", dimgrid, scale);
   for(int i = 0; i < total; i++){
     // printf(" %d ", c_host[i]);
     fprintf(fp, "%d ", c_host[i]);
