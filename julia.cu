@@ -31,7 +31,7 @@ struct complex{
 
 // Test if a coordiate is in the julia set
 
-__device__ int julia(int x, int y, int dim, int scale){
+__device__ int julia(int x, int y, int dim, float scale){
 
   // Declare scale
   // const float scale = 3;
@@ -44,20 +44,21 @@ __device__ int julia(int x, int y, int dim, int scale){
   complex a(jx, jy);
   complex c(-0.8, 0.156);
 
+  int val = 0;
+
   // Do 200 calculation of the julia set
   for(int i = 0; i < 200; i++){
     a = a*a + c;
     // When a get really big -> a diverge -> not in Julia set
-    if(a.magnitude() > 1000){
-      return 255;
-    }
+    if(a.magnitude() > 100 && i < 50) {val = 2; break;}
+    // else if (a.magnitude() > 80 && i > 50) {val = 1; break;}
   }
+  // if(a.magnitude() > 1000) val = 2;
 
-  // a did not diverge
-  return 0;
+  return val;
 }
 
-__global__ void kernel(int *c, int scale){
+__global__ void kernel(int *c, float scale){
 
   // get the current position
   int x = blockIdx.x;
@@ -76,15 +77,15 @@ int main(int argc, char **argv){
   // printf("%d -- %c \n", argc, argv[2]);
 
 
-  int scale = 2;
+  float scale = 2.0;
   if(argc > 1){
-    char *p; // For using in strtol
-    scale = strtol(argv[1], &p, 10);
+    // char *p; // For using in strtol
+    scale = atof(argv[1]);
   }
   // printf(" %d \n", strtol(argv[1], &p, 10));
 
   // int res = julia(0.5, 0.7);
-  int dimgrid = 1000;
+  int dimgrid = 2048;
   dim3 grid(dimgrid, dimgrid);
   // int dimthread = 1;
 
@@ -104,7 +105,7 @@ int main(int argc, char **argv){
   FILE *fp;
 
   fp = fopen("test.txt", "w");
-  printf("File opened n = %d | scale = %d", dimgrid, scale);
+  printf("File opened n = %d | scale = %.3f", dimgrid, scale);
   for(int i = 0; i < total; i++){
     // printf(" %d ", c_host[i]);
     fprintf(fp, "%d ", c_host[i]);
