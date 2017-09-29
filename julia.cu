@@ -10,15 +10,17 @@ struct complex{
   float i;
   //Constructor
   __device__ complex(float a, float b) : r(a), i(b) {}
+
   //methods
-  void print(){printf("%f + %f*i", r, i);};
+  // void print(){printf("%f + %f*i", r, i);};
+
   __device__ float magnitude(){
-    return (r*r) + (i*i);
+    return r*r + i*i;
   }
 
   //modify the actual + operator
   __device__ complex operator+(const complex &b){
-    return complex(r*b.r, i*b.i);
+    return complex(r + b.r, i + b.i);
   }
 
   //modify the actual * operator
@@ -40,13 +42,13 @@ __device__ int julia(int x, int y, int dim, int scale){
 
   // Creating 2 complex numbers
   complex a(jx, jy);
-  complex c(0, -0.8);
+  complex c(-0.8, 0.156);
 
   // Do 200 calculation of the julia set
   for(int i = 0; i < 200; i++){
     a = a*a + c;
     // When a get really big -> a diverge -> not in Julia set
-    if(a.magnitude() > 50){
+    if(a.magnitude() > 1000){
       return 255;
     }
   }
